@@ -443,3 +443,13 @@ const roadmap = [
     ]
   }
 ];
+
+// Ensure `roadmap` is also available as a global property so other scripts can access it reliably
+try {
+  if (typeof roadmap !== 'undefined') {
+    window.roadmap = roadmap;
+    console.info('data.js: roadmap defined with', Array.isArray(roadmap) ? roadmap.length + ' phases' : typeof roadmap);
+  }
+} catch (e) {
+  console.error('data.js: failed to expose roadmap globally', e);
+}
