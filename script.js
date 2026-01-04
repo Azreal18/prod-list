@@ -43,7 +43,12 @@ function chunk(arr, size) {
   return out;
 }
 
-roadmap.forEach((phase, pIdx) => {
+if (typeof roadmap === 'undefined' || !Array.isArray(roadmap) || roadmap.length === 0) {
+  console.error('Roadmap not loaded or empty:', roadmap);
+  content.innerHTML = `<div class="card error">Roadmap not found. Ensure <code>data.js</code> is included and loading correctly (check console/network).</div>`;
+} else {
+  try {
+    roadmap.forEach((phase, pIdx) => {
   const phaseBlock = document.createElement('section');
   phaseBlock.className = 'phase-block';
   phaseBlock.id = `phase-${pIdx}`;
@@ -177,6 +182,11 @@ roadmap.forEach((phase, pIdx) => {
   opt.textContent = phase.phase;
   phaseSelect.appendChild(opt);
 });
+  } catch (err) {
+    console.error('Error rendering roadmap', err);
+    content.innerHTML = `<div class="card error">Error rendering roadmap. Check console for details.</div>`;
+  }
+}
 
 phaseSelect.addEventListener('change', () => {
   const val = phaseSelect.value;
@@ -189,6 +199,7 @@ updateProgress();
 
 // ---------- PROGRESS ----------
 function updateProgress() {
+  if (typeof roadmap === 'undefined' || !Array.isArray(roadmap)) return;
   roadmap.forEach((phase, pIdx) => {
     const total = phase.days.length;
     let completed = 0;
