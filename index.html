@@ -4,9 +4,50 @@
   <meta charset="UTF-8" />
   <title>Study Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css" onload="__diag && __diag('style.css loaded','info')" onerror="__diag && __diag('style.css failed to load','error')" />
+  <script>
+    // temporary diagnostic queue so onload/onerror handlers can report before UI is ready
+    window.__diagQueue = [];
+    window.__diag = function(msg, level){ window.__diagQueue.push({msg, level}); };
+  </script>
 </head>
 <body>
+  <script>
+    (function(){
+      function addMsg(msg, level){
+        console[level==='error'?'error':'log']('Diag:', msg);
+        var el = document.getElementById('diag');
+        if(!el){
+          el = document.createElement('div');
+          el.id = 'diag';
+          el.style.cssText = 'font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;position:fixed;right:12px;top:12px;width:320px;max-height:50vh;overflow:auto;z-index:9999;border-radius:8px;';
+          document.body.insertBefore(el, document.body.firstChild);
+        }
+        var p = document.createElement('div');
+        p.textContent = msg;
+        p.style.cssText = (level === 'error' ? 'background:#c00;color:#fff;padding:8px;margin:6px;border-radius:6px;' : 'background:#eee;color:#111;padding:6px;margin:6px;border-radius:6px;');
+        el.appendChild(p);
+      }
+
+      window.__diag = function(msg, level){ addMsg(msg, level); };
+      // flush queued messages
+      (window.__diagQueue || []).forEach(function(item){ addMsg(item.msg, item.level); });
+      window.__diagQueue = [];
+
+      setTimeout(function(){
+        var sheets = Array.from(document.styleSheets).filter(function(s){ return !!s.href; });
+        var hasStyle = sheets.some(function(s){ return s.href.indexOf('style.css') !== -1; });
+        if(!hasStyle) addMsg('Stylesheet not detected: style.css. Buttons may look different.', 'error');
+        else addMsg('Stylesheet detected: ' + sheets.find(function(s){ return s.href.indexOf('style.css') !== -1; }).href, 'info');
+
+        if(typeof roadmap === 'undefined') addMsg('data.js / roadmap not detected. Phases will not render.', 'error');
+        else addMsg('Roadmap loaded: ' + (Array.isArray(roadmap) ? roadmap.length + ' phases' : typeof roadmap), 'info');
+      }, 120);
+
+      window.addEventListener('error', function(e){ addMsg('Resource or runtime error: ' + (e && (e.message || e.filename || (e.target && (e.target.src || e.target.href)))) , 'error'); }, true);
+      window.addEventListener('unhandledrejection', function(e){ addMsg('UnhandledRejection: ' + (e && (e.reason && e.reason.message) || e.reason), 'error'); });
+    })();
+  </script>
 
 <header>
   <div>
@@ -36,8 +77,8 @@
   <p>Consistency beats intensity.</p>
 </footer>
 
-<script src="data.js"></script>
-<script src="utils.js"></script>
-<script src="script.js"></script>
+<script src="data.js" onload="__diag && __diag('data.js loaded','info')" onerror="__diag && __diag('data.js failed to load','error')"></script>
+<script src="utils.js" onload="__diag && __diag('utils.js loaded','info')" onerror="__diag && __diag('utils.js failed to load','error')"></script>
+<script src="script.js" onload="__diag && __diag('script.js loaded','info')" onerror="__diag && __diag('script.js failed to load','error')"></script>
 </body>
 </html>
